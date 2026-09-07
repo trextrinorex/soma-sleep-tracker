@@ -65,7 +65,7 @@ class DashboardViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _state.update {
-                    it.copy(isLoading = false, errorMessage = e.message ?: "Unknown error")
+                    it.copy(isLoading = false, errorMessage = e.message ?: "Unable to load sleep data")
                 }
             }
         }
@@ -73,9 +73,18 @@ class DashboardViewModel @Inject constructor(
 
     private fun runInference() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            repository.runInferenceForLastNight()
-            loadData()
+            _state.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                repository.runInferenceForLastNight()
+                loadData()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Sleep analysis could not be completed"
+                    )
+                }
+            }
         }
     }
 
